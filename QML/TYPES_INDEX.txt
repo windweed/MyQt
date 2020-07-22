@@ -1,0 +1,191 @@
+Rectangle {
+    gradient: Gradient {
+        GradientStop {position: 0.0; color: "lightsteelblue"; } //颜色加位置
+        GradientStop {position: 1.0; color: "slategray"; }
+    }
+    同时指定color与gradient, gradient生效; 设置color为transparent, 只绘制边框不填充
+    antialiasing: true;
+}
+
+Window {
+    顶层窗口, 对应C++类型为QQuickWindow
+
+    data list<Object>类型
+
+    visibility Window.Windowed/Minimized/Maximized/FullScreen  标题栏隐藏/AutomaticVisibility/Hidden
+
+    contentOrientation 设置窗口内容布局方向
+
+    activeFocusItem Item类型，保存窗口中拥有活动焦点的Item
+
+    modality 模态 模态窗口会阻止其他窗口获取输入事件
+        Qt.NonModal 非模态
+        Qt.WindowModal 窗口级别模态 设置此属性的窗口只针对某一个窗口是模态的, 比如子窗口相对父窗口
+            是模态的, 相对于同一应用中的其他非父窗口则没有模态效果
+        Qt.ApplicationModal 应用级别的模态 设置此属性的窗口会阻止同一应用的其他窗口获取输入事件
+        
+    flags: Qt.FramelessWindowHint
+}
+
+
+Item {
+    z 用来指定图元在场景中的Z序. real类型, 数值越小, 越垫底
+    opacity 0-1. 0透明
+    
+    clip 根据自己的位置和大小来裁切它自己以及孩子们的显示范围. true, 则限定自己为范围, false, 则可延伸至外面
+    
+    Item可用来分组图元 就像js中的div
+    Rectangle {
+        Item {
+            id: xxxgroup
+            Rectangle {...}
+            Rectangle {...}
+        }
+        for (var i = 0; i < xxxgroup.children.length; ++i)
+        {
+            console.log("xxxgroup.children[i].x")
+        }
+        //分组后可通过children或visibleChildren属性来访问孩子元素
+    }
+
+
+
+    children :[
+        Text {
+            text: qsTr("textOne")
+        },
+        Text { text: qsTr("textTwo")}
+    ]
+    Component.onCompleted: {
+        for (var i = 0; i < children.length; ++i)
+            console.log("text of label:", i, " : ", children[i].text );
+    }
+    Item {
+        children: Image{} //如果只有一个元素， 可以省略[].
+    }
+
+}
+
+
+Item.anchors {
+    verticalCenter //水平线
+    horizontalCenter //垂直线
+    baseline //用于定位文本, 对于没有文本的图元,baseline与top一致
+    margins
+}
+
+Item.Keys {//响应按键
+    Keys对象由QtQuick提供
+        Item { Keys.enabled: false }
+    Item通过附加属性Keys来处理按键.
+    Keys对象定义了信号, 比如returnPressed, 还有更为普遍的pressed和released信号
+        它们有一个类型为KeyEvent, 名字为event的参数, 包含按键的详细信息, 如果一个按键被处理, 
+        event.accepted应该被设置为true, 以免它被继续传递
+    
+    demo:检测到escape和backspace时退出应用, 检测到数字键时, 显示对应数字
+    Rectangle {
+        width: 300;  height: 200;
+        focus: true;
+
+        Keys.enabled: true;
+        Keys.onEscapePressed: Qt.quit();
+        Keys.onBackPressed: Qt.quit();
+        Keys.onPressed: {
+            switch (event.key) {
+            case Qt.Key_0:
+            //...
+            case Qt.Key_9:
+                event.accepted = true;
+                keyView.text = event.key - Qt.Key_0;
+                break;
+            }
+        }
+        
+        Text {
+            id: keyView
+            text: qsTr("text");
+        }
+    }
+}
+
+Text {
+    font, text, color, elide, textFormat, wrapMode, horizontalAlignment, verticalAlignment
+    bold, underline, pixelSize ...
+    
+    elide: true //省略
+    wrapMode: Text.WordWrap
+    text: "Hello Blue <font color=\"blue\">Text</font>"
+
+    style: Text.Raised //Outline   Sunken
+    styleColor: "blue"
+}
+
+Button {
+    checkable. checked
+    iconName
+    iconSource 通过URL方式指定icon位置
+    isDefault enter触发clicked()
+    pressed 保存按下状态
+    menu 允许给按钮设置一个菜单. 默认null
+    action 可以定义按钮的checked, text, tooltip, iconSource等属性, 还可以绑定clicked信号, 默认null
+    activeFocusOnPress 指定按钮被按下时是否获取焦点. 默认false
+
+    onClicked: {
+        console.log("hello world");
+    }
+
+    ButtonStyle
+        background, control, label
+        background和label: Component类型
+        control 指向使用ButtonStyle的按钮对象
+        
+
+        usage:
+        style: ButtonStyle {...} //就地实现
+        Component {//Component实现
+            id: btnStyle;
+            ButtonStyle {
+                ...
+                control.hovered
+                control.onPressed
+            }
+        }
+        Button {
+            ...
+            style: btnStyle
+        }
+        
+}
+
+Image {
+    动画可使用AnimatedSprite或 AnimatedImage
+    width, height. 设置此2值后, 图片会拉伸
+    fillMode 设置图片的填充模式 {
+        Image.Stretch
+        Image.PreserveAspectFit,//等比缩放  // 推荐
+        Image.PreserveAspectCrop//等比缩放, 最大化填充Image,必要时裁剪
+        Image.Tile //水平和垂直两个方向上平铺
+        Image.TileVertically// 垂直平铺
+        Image.TileHorizontally//水平平铺
+        Image.Pad//原样式
+    }
+    anchors.centerIn: parent
+    asynchronous 阻塞与否. true时异步, 当status的值为Image.Ready时再隐藏加载等候界面
+    source 类型为url. 网络资源时自动启用异步
+    cache
+    //TODO  source
+}
+
+
+BusyIndicator {
+    等待图元
+    running, style
+    //TODO
+}
+
+FileDialog {
+    //TODO
+}
+
+
+
